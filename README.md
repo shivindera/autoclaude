@@ -1,4 +1,4 @@
-# autoclaude
+# autoclaude 🧑‍💻
 
 Automatically resume [Claude Code](https://claude.ai/claude-code) sessions when you hit your rate limit.
 
