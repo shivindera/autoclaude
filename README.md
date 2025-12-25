@@ -1,5 +1,7 @@
 # autoclaude 🧑‍💻
 
+[![CI](https://github.com/henryaj/autoclaude/actions/workflows/ci.yml/badge.svg)](https://github.com/henryaj/autoclaude/actions/workflows/ci.yml)
+
 Automatically resume [Claude Code](https://claude.ai/claude-code) sessions when you hit your rate limit.
 
 ## Installation
