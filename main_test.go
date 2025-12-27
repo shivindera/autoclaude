@@ -256,11 +256,46 @@ func TestUsageConsistency(t *testing.T) {
 		{"-v", "verbose"},
 		{"-version", "version"},
 		{"-test", "test"},
+		{"-force", "force"},
+		{"-force-text", "force-text"},
+		{"-panes", "panes"},
 	}
 
 	for _, f := range flags {
 		if !strings.Contains(usage, f.flag) {
 			t.Errorf("usage should document flag %s", f.flag)
 		}
+	}
+}
+
+// TestFlagParsing_ForceText tests the force-text flag parsing.
+func TestFlagParsing_ForceText(t *testing.T) {
+	fs := flag.NewFlagSet("test", flag.ContinueOnError)
+	var forceText string
+	fs.StringVar(&forceText, "force-text", "", "Custom text")
+
+	err := fs.Parse([]string{"-force-text", "please continue"})
+	if err != nil {
+		t.Errorf("Parsing -force-text failed: %v", err)
+	}
+
+	if forceText != "please continue" {
+		t.Errorf("forceText = %q, want %q", forceText, "please continue")
+	}
+}
+
+// TestFlagParsing_Panes tests the panes flag parsing.
+func TestFlagParsing_Panes(t *testing.T) {
+	fs := flag.NewFlagSet("test", flag.ContinueOnError)
+	var targetPanes string
+	fs.StringVar(&targetPanes, "panes", "", "Target panes")
+
+	err := fs.Parse([]string{"-panes", "%0,%2,%4"})
+	if err != nil {
+		t.Errorf("Parsing -panes failed: %v", err)
+	}
+
+	if targetPanes != "%0,%2,%4" {
+		t.Errorf("targetPanes = %q, want %q", targetPanes, "%0,%2,%4")
 	}
 }

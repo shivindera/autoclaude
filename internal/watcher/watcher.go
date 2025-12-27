@@ -24,10 +24,12 @@ type Watcher struct {
 	verbose       bool
 	testMode      bool
 	forceInterval time.Duration
+	forceText     string
+	targetPanes   []string
 }
 
 // New creates a new Watcher for the current tmux window.
-func New(verbose bool, testMode bool, forceInterval time.Duration) (*Watcher, error) {
+func New(verbose bool, testMode bool, forceInterval time.Duration, forceText string, targetPanes string) (*Watcher, error) {
 	if err := tmux.ValidateEnvironment(); err != nil {
 		return nil, err
 	}
@@ -37,11 +39,24 @@ func New(verbose bool, testMode bool, forceInterval time.Duration) (*Watcher, er
 		return nil, fmt.Errorf("failed to get current window: %w", err)
 	}
 
+	// Parse target panes if specified
+	var panes []string
+	if targetPanes != "" {
+		for _, p := range strings.Split(targetPanes, ",") {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				panes = append(panes, p)
+			}
+		}
+	}
+
 	return &Watcher{
 		window:        window,
 		verbose:       verbose,
 		testMode:      testMode,
 		forceInterval: forceInterval,
+		forceText:     forceText,
+		targetPanes:   panes,
 	}, nil
 }
 
@@ -128,11 +143,21 @@ func (w *Watcher) runTestMode(ctx context.Context) error {
 	return nil
 }
 
-// runForceMode periodically sends "continue" to Claude Code panes.
+// runForceMode periodically sends input to Claude Code panes.
 func (w *Watcher) runForceMode(ctx context.Context) error {
 	w.log("Starting autoclaude in FORCE mode...")
 	w.log("Watching tmux window: %s", w.window)
 	w.log("Force interval: %v", w.forceInterval)
+	if w.forceText != "" {
+		w.log("Force text: %q", w.forceText)
+	} else {
+		w.log("Force text: %q (default)", resumeMsg)
+	}
+	if len(w.targetPanes) > 0 {
+		w.log("Target panes: %v", w.targetPanes)
+	} else {
+		w.log("Target panes: all other panes in window")
+	}
 
 	ticker := time.NewTicker(w.forceInterval)
 	defer ticker.Stop()
@@ -148,7 +173,7 @@ func (w *Watcher) runForceMode(ctx context.Context) error {
 	}
 }
 
-// forceOnce sends "continue" to all Claude Code panes.
+// forceOnce sends input to all targeted Claude Code panes.
 func (w *Watcher) forceOnce(ctx context.Context) {
 	w.debug("--- Force cycle starting ---")
 
@@ -161,8 +186,20 @@ func (w *Watcher) forceOnce(ctx context.Context) {
 	currentPane, _ := tmux.GetCurrentPane()
 	w.debug("Found %d pane(s) in window %s", len(panes), w.window)
 
+	// Determine text to send
+	textToSend := resumeMsg
+	if w.forceText != "" {
+		textToSend = w.forceText
+	}
+
 	for _, pane := range panes {
 		if pane == currentPane {
+			continue
+		}
+
+		// If target panes are specified, only process those
+		if len(w.targetPanes) > 0 && !w.isPaneTargeted(pane) {
+			w.debug("Pane %s is not in target list, skipping", pane)
 			continue
 		}
 
@@ -173,9 +210,17 @@ func (w *Watcher) forceOnce(ctx context.Context) {
 		}
 
 		if detector.IsClaudeCodePane(content) {
-			w.log("Sending 'continue' to Claude Code pane %s", pane)
-			if err := tmux.SendKeys(pane, resumeMsg); err != nil {
-				w.log("ERROR: Failed to send continue: %v", err)
+			w.log("Sending to Claude Code pane %s: Enter + %q + Enter", pane, textToSend)
+			// Send leading Enter to dismiss any selector menu
+			if err := tmux.SendEnter(pane); err != nil {
+				w.log("ERROR: Failed to send leading Enter: %v", err)
+				continue
+			}
+			// Brief pause to let the UI respond
+			time.Sleep(100 * time.Millisecond)
+			// Send the text followed by Enter
+			if err := tmux.SendKeys(pane, textToSend); err != nil {
+				w.log("ERROR: Failed to send text: %v", err)
 			}
 		} else {
 			w.debug("Pane %s is not a Claude Code pane, skipping", pane)
@@ -183,6 +228,16 @@ func (w *Watcher) forceOnce(ctx context.Context) {
 	}
 
 	w.debug("--- Force cycle complete ---")
+}
+
+// isPaneTargeted checks if the pane is in the target list.
+func (w *Watcher) isPaneTargeted(pane string) bool {
+	for _, target := range w.targetPanes {
+		if target == pane {
+			return true
+		}
+	}
+	return false
 }
 
 func (w *Watcher) pollOnce(ctx context.Context) {

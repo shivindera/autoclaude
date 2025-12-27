@@ -120,7 +120,7 @@ func TestNewWatcher_NotInTmux(t *testing.T) {
 		}
 	}()
 
-	_, err := New(false, false, 0)
+	_, err := New(false, false, 0, "", "")
 	if err == nil {
 		t.Error("New() should fail when not in tmux session")
 	}
@@ -144,9 +144,54 @@ func TestNewWatcher_NoPaneEnv(t *testing.T) {
 		}
 	}()
 
-	_, err := New(false, false, 0)
+	_, err := New(false, false, 0, "", "")
 	if err == nil {
 		t.Error("New() should fail when TMUX_PANE not set")
+	}
+}
+
+// TestIsPaneTargeted tests the isPaneTargeted helper function.
+func TestIsPaneTargeted(t *testing.T) {
+	tests := []struct {
+		name        string
+		targetPanes []string
+		pane        string
+		expected    bool
+	}{
+		{
+			name:        "pane in target list",
+			targetPanes: []string{"%0", "%1", "%2"},
+			pane:        "%1",
+			expected:    true,
+		},
+		{
+			name:        "pane not in target list",
+			targetPanes: []string{"%0", "%2"},
+			pane:        "%1",
+			expected:    false,
+		},
+		{
+			name:        "empty target list",
+			targetPanes: []string{},
+			pane:        "%0",
+			expected:    false,
+		},
+		{
+			name:        "single target",
+			targetPanes: []string{"%5"},
+			pane:        "%5",
+			expected:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := &Watcher{targetPanes: tt.targetPanes}
+			result := w.isPaneTargeted(tt.pane)
+			if result != tt.expected {
+				t.Errorf("isPaneTargeted(%q) = %v, want %v", tt.pane, result, tt.expected)
+			}
+		})
 	}
 }
 
@@ -176,6 +221,8 @@ func TestWatcherStruct(t *testing.T) {
 		verbose:       true,
 		testMode:      true,
 		forceInterval: 30 * time.Second,
+		forceText:     "custom text",
+		targetPanes:   []string{"%0", "%2"},
 	}
 
 	if w.window != "@1" {
@@ -189,6 +236,12 @@ func TestWatcherStruct(t *testing.T) {
 	}
 	if w.forceInterval != 30*time.Second {
 		t.Errorf("forceInterval = %v, want 30s", w.forceInterval)
+	}
+	if w.forceText != "custom text" {
+		t.Errorf("forceText = %q, want %q", w.forceText, "custom text")
+	}
+	if len(w.targetPanes) != 2 || w.targetPanes[0] != "%0" || w.targetPanes[1] != "%2" {
+		t.Errorf("targetPanes = %v, want [%%0, %%2]", w.targetPanes)
 	}
 }
 
