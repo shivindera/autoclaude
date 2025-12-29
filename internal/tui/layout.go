@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"math"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -91,11 +92,11 @@ func renderLayout(layout *tmux.Layout, selectedID string, width, height int) str
 
 // drawPane draws a single pane on the grid with appropriate styling
 func drawPane(grid [][]string, p *tmux.Pane, selected bool, scaleX, scaleY float64, gridW, gridH int) {
-	// Calculate scaled coordinates
-	x1 := int(float64(p.Left) * scaleX)
-	y1 := int(float64(p.Top) * scaleY)
-	x2 := int(float64(p.Left+p.Width) * scaleX)
-	y2 := int(float64(p.Top+p.Height) * scaleY)
+	// Calculate scaled coordinates using round to minimize gaps between adjacent panes
+	x1 := int(math.Round(float64(p.Left) * scaleX))
+	y1 := int(math.Round(float64(p.Top) * scaleY))
+	x2 := int(math.Round(float64(p.Left+p.Width) * scaleX))
+	y2 := int(math.Round(float64(p.Top+p.Height) * scaleY))
 
 	// Ensure minimum size
 	if x2 <= x1 {
