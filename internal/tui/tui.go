@@ -348,7 +348,7 @@ func (m Model) View() string {
 	if mainWidth < 10 {
 		mainWidth = 10
 	}
-	mainHeight := m.height - 6 // Account for header + footer + margins
+	mainHeight := m.height - 7 // Account for header + 2-line footer + margins
 	if mainHeight < 3 {
 		mainHeight = 3
 	}
@@ -396,16 +396,13 @@ func (m Model) View() string {
 
 	helpText := dimTextStyle.Render("←↑↓→ nav • tab toggle • a on • n off • r refresh • q quit")
 
-	// Calculate spacing to right-align help text
-	statusLen := lipgloss.Width(statusText)
-	helpLen := lipgloss.Width(helpText)
-	footerWidth := m.width - 4
-	footerSpacerLen := footerWidth - statusLen - helpLen
-	if footerSpacerLen < 1 {
-		footerSpacerLen = 1
+	// Footer: status on first line, help on second line (both left-aligned)
+	var footer string
+	if statusText != "" {
+		footer = "  " + statusText + "\n  " + helpText
+	} else {
+		footer = "  " + helpText
 	}
-	footerSpacer := lipgloss.NewStyle().Width(footerSpacerLen).Render("")
-	footer := "  " + statusText + footerSpacer + helpText
 
 	// Compose the full view
 	return lipgloss.JoinVertical(lipgloss.Left, header, mainPane, footer)
