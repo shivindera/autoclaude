@@ -345,8 +345,8 @@ func (m Model) View() string {
 	// Footer with selected pane status (left) and help (right)
 	var statusText string
 
-	// Show "continue sent" message for 3 seconds after sending
-	if !m.lastContinueSent.IsZero() && time.Since(m.lastContinueSent) < 3*time.Second {
+	// Show "continue sent" message for 20 seconds after sending
+	if !m.lastContinueSent.IsZero() && time.Since(m.lastContinueSent) < 20*time.Second {
 		statusText = lipgloss.NewStyle().Foreground(lipgloss.Color("#f1fa8c")).Bold(true).Render("↳ continue sent!")
 	} else if m.layout != nil {
 		if pane := m.layout.PaneByID(m.selectedPaneID); pane != nil {
