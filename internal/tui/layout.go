@@ -8,13 +8,13 @@ import (
 	"github.com/henryaj/autoclaude/internal/tmux"
 )
 
-// Colors for pane rendering
+// Colors for pane rendering - bold, high-contrast
 var (
-	claudeOrange    = lipgloss.Color("#e07c3e") // Claude Code orange
-	autoGreen       = lipgloss.Color("#50fa7b") // Green for auto mode
-	selectedColor   = lipgloss.Color("#00d7ff") // Cyan for selected
-	unselectedColor = lipgloss.Color("#4a4a4a") // Dark gray for unselected
-	rateLimitRed    = lipgloss.Color("#ff5555") // Red for rate limited
+	claudeOrange    = lipgloss.Color("#ffb86c") // Bright orange for Claude Code
+	autoGreen       = lipgloss.Color("#50fa7b") // Bright green for auto mode
+	selectedColor   = lipgloss.Color("#00ffff") // Bright cyan for selected
+	unselectedColor = lipgloss.Color("#6272a4") // Muted blue-gray for unselected
+	rateLimitRed    = lipgloss.Color("#ff5555") // Bright red for rate limited
 )
 
 // Box drawing characters

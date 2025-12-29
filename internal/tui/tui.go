@@ -13,22 +13,23 @@ import (
 
 const pollInterval = 10 * time.Second
 
-// Colors - subtle cyan/gray palette
+// Colors - bold, high-contrast palette
 var (
-	cyan      = lipgloss.Color("#00d7ff")
-	dimCyan   = lipgloss.Color("#5f87af")
-	darkGray  = lipgloss.Color("#3a3a3a")
-	lightGray = lipgloss.Color("#6c6c6c")
+	accentCyan   = lipgloss.Color("#00ffff") // Bright cyan
+	accentPurple = lipgloss.Color("#bd93f9") // Soft purple
+	brightWhite  = lipgloss.Color("#f8f8f2") // Off-white
+	mutedGray    = lipgloss.Color("#6272a4") // Muted blue-gray
+	borderColor  = lipgloss.Color("#44475a") // Dark purple-gray
 )
 
 // Styles
 var (
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(cyan)
+			Foreground(accentCyan)
 
 	versionStyle = lipgloss.NewStyle().
-			Foreground(dimCyan)
+			Foreground(accentPurple)
 
 	headerStyle = lipgloss.NewStyle().
 			PaddingLeft(1).
@@ -36,15 +37,15 @@ var (
 
 	mainPaneStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(darkGray).
+			BorderForeground(borderColor).
 			Padding(1, 2)
 
 	dimTextStyle = lipgloss.NewStyle().
-			Foreground(lightGray).
-			Italic(true)
+			Foreground(mutedGray)
 
 	errorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#ff5555"))
+			Foreground(lipgloss.Color("#ff5555")).
+			Bold(true)
 )
 
 // Messages
