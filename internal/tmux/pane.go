@@ -32,7 +32,7 @@ type Pane struct {
 	ID              string
 	Left, Top       int
 	Width, Height   int
-	Command         string // Current command running in the pane
+	Title           string // Pane title (set by running application)
 	Mode            PaneMode
 	HasClaudeCode   bool
 	IsRateLimited   bool

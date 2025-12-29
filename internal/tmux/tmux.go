@@ -48,8 +48,8 @@ func ListPanes() (*Layout, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), commandTimeout)
 	defer cancel()
 
-	// Format: pane_id pane_left pane_top pane_width pane_height pane_current_command
-	cmd := exec.CommandContext(ctx, "tmux", "list-panes", "-F", "#{pane_id} #{pane_left} #{pane_top} #{pane_width} #{pane_height} #{pane_current_command}")
+	// Format: pane_id pane_left pane_top pane_width pane_height pane_title
+	cmd := exec.CommandContext(ctx, "tmux", "list-panes", "-F", "#{pane_id} #{pane_left} #{pane_top} #{pane_width} #{pane_height} #{pane_title}")
 	output, err := cmd.Output()
 	if err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
@@ -111,9 +111,10 @@ func parsePaneLine(line string) (*Pane, error) {
 		return nil, fmt.Errorf("parse height: %w", err)
 	}
 
-	command := ""
+	// Title may contain spaces, so join remaining fields
+	title := ""
 	if len(fields) >= 6 {
-		command = fields[5]
+		title = strings.Join(fields[5:], " ")
 	}
 
 	return &Pane{
@@ -122,7 +123,7 @@ func parsePaneLine(line string) (*Pane, error) {
 		Top:     top,
 		Width:   width,
 		Height:  height,
-		Command: command,
+		Title:   title,
 		Mode:    ModeOff,
 	}, nil
 }

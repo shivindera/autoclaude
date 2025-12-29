@@ -173,22 +173,22 @@ func drawPane(grid [][]string, p *tmux.Pane, selected bool, scaleX, scaleY float
 	paneWidth := x2 - x1 - 2 // Available width inside borders
 
 	if p.HasClaudeCode {
-		// CC panes: show mode on center line, command below
+		// CC panes: show mode on center line, title below
 		modeLabel := p.Mode.String()
 		drawCenteredText(grid, modeLabel, x1, x2, centerY, labelStyle)
 
-		// Show command name below if there's room
-		if centerY+1 < y2 && p.Command != "" {
-			cmdStyle := lipgloss.NewStyle().Foreground(labelColor).Italic(true)
-			cmd := truncate(p.Command, paneWidth)
-			drawCenteredText(grid, cmd, x1, x2, centerY+1, cmdStyle)
+		// Show title below if there's room
+		if centerY+1 < y2 && p.Title != "" {
+			titleStyle := lipgloss.NewStyle().Foreground(labelColor).Italic(true)
+			title := truncate(p.Title, paneWidth)
+			drawCenteredText(grid, title, x1, x2, centerY+1, titleStyle)
 		}
 	} else {
-		// Non-CC panes: just show command name in italics
-		if p.Command != "" {
-			cmdStyle := lipgloss.NewStyle().Foreground(labelColor).Italic(true)
-			cmd := truncate(p.Command, paneWidth)
-			drawCenteredText(grid, cmd, x1, x2, centerY, cmdStyle)
+		// Non-CC panes: just show title in italics
+		if p.Title != "" {
+			titleStyle := lipgloss.NewStyle().Foreground(labelColor).Italic(true)
+			title := truncate(p.Title, paneWidth)
+			drawCenteredText(grid, title, x1, x2, centerY, titleStyle)
 		}
 	}
 }
