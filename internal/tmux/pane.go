@@ -1,5 +1,7 @@
 package tmux
 
+import "time"
+
 // PaneMode represents the operating mode for a pane
 type PaneMode int
 
@@ -36,8 +38,9 @@ type Pane struct {
 	Mode            PaneMode
 	HasClaudeCode   bool
 	IsRateLimited   bool
-	RateLimitResets string
-	WasRateLimited  bool // Track previous state for transition detection
+	RateLimitResets string    // Display string like "10pm"
+	RateLimitTime   time.Time // Parsed reset time
+	ContinueSent    bool      // Whether we've sent continue for this rate limit
 }
 
 // Center returns the center point of the pane

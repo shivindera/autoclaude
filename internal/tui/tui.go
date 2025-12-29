@@ -206,23 +206,41 @@ func (m *Model) pollPanes() {
 		// Check rate limit status for Claude Code panes
 		if pane.HasClaudeCode {
 			status := detection.CheckRateLimit(content)
+
+			// Track rate limit state
 			wasLimited := pane.IsRateLimited
-			pane.WasRateLimited = wasLimited
 			pane.IsRateLimited = status.IsLimited
 			pane.RateLimitResets = status.ResetsAt
+			pane.RateLimitTime = status.ResetTime
 
-			// Auto-continue: if rate limit just reset and mode is auto
-			if wasLimited && !status.IsLimited && pane.Mode == tmux.ModeContinueOnRateLimit {
-				m.sendContinue(pane.ID)
+			// Reset ContinueSent when a new rate limit appears
+			if !wasLimited && status.IsLimited {
+				pane.ContinueSent = false
 			}
 
-			// Test mode: trigger on test pattern
-			if m.testPattern != "" && strings.Contains(content, m.testPattern) && pane.Mode == tmux.ModeContinueOnRateLimit {
+			// Auto-continue: when reset time has passed and we haven't sent yet
+			if pane.IsRateLimited &&
+				pane.Mode == tmux.ModeContinueOnRateLimit &&
+				!pane.ContinueSent &&
+				!pane.RateLimitTime.IsZero() &&
+				time.Now().After(pane.RateLimitTime) {
 				m.sendContinue(pane.ID)
+				pane.ContinueSent = true
+			}
+
+			// Test mode: trigger on test pattern (with cooldown)
+			if m.testPattern != "" &&
+				strings.Contains(content, m.testPattern) &&
+				pane.Mode == tmux.ModeContinueOnRateLimit &&
+				!pane.ContinueSent {
+				m.sendContinue(pane.ID)
+				pane.ContinueSent = true
 			}
 		} else {
 			pane.IsRateLimited = false
 			pane.RateLimitResets = ""
+			pane.RateLimitTime = time.Time{}
+			pane.ContinueSent = false
 		}
 	}
 }
@@ -248,7 +266,8 @@ func (m *Model) updateLayout(layout *tmux.Layout) {
 				newPane.HasClaudeCode = oldPane.HasClaudeCode
 				newPane.IsRateLimited = oldPane.IsRateLimited
 				newPane.RateLimitResets = oldPane.RateLimitResets
-				newPane.WasRateLimited = oldPane.WasRateLimited
+				newPane.RateLimitTime = oldPane.RateLimitTime
+				newPane.ContinueSent = oldPane.ContinueSent
 			}
 		}
 	}

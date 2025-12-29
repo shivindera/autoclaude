@@ -224,6 +224,10 @@ func drawCenteredText(grid [][]string, text string, x1, x2, y int, style lipglos
 			w := runewidth.RuneWidth(r)
 			if w > 0 {
 				setCell(grid, x, y, style.Render(string(r)))
+				// Wide characters (w=2) occupy 2 cells; clear the next cell
+				if w == 2 {
+					setCell(grid, x+1, y, "")
+				}
 				x += w
 			}
 		}
