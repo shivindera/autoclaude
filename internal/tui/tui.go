@@ -400,15 +400,19 @@ func (m Model) View() string {
 	} else if m.layout != nil {
 		if pane := m.layout.PaneByID(m.selectedPaneID); pane != nil {
 			if pane.HasClaudeCode {
-				if pane.IsRateLimited {
-					statusText = errorStyle.Render("⏳ Rate limited")
-					if pane.RateLimitResets != "" {
-						statusText += dimTextStyle.Render(" resets " + pane.RateLimitResets)
-					}
-				} else if pane.Mode == tmux.ModeContinueOnRateLimit {
+				// Always show auto-continue status first
+				if pane.Mode == tmux.ModeContinueOnRateLimit {
 					statusText = lipgloss.NewStyle().Foreground(lipgloss.Color("#50fa7b")).Render("● Auto-continue enabled")
 				} else {
 					statusText = dimTextStyle.Render("○ Auto-continue disabled")
+				}
+				// Add rate limit info on same line if applicable
+				if pane.IsRateLimited {
+					rateLimitText := errorStyle.Render(" ⏳ Rate limited")
+					if pane.RateLimitResets != "" {
+						rateLimitText += dimTextStyle.Render(" resets " + pane.RateLimitResets)
+					}
+					statusText += rateLimitText
 				}
 			}
 		}
