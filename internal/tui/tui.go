@@ -499,7 +499,8 @@ sends "continue" when rate limits reset.
 
 ` + lipgloss.NewStyle().Bold(true).Foreground(accentCyan).Render("HOW IT WORKS") + `
 
-  When a Claude Code pane shows "limit reached ∙ resets Xpm",
+  When a Claude Code pane shows a rate limit message like
+  "limit reached ∙ resets Xpm" or "You've hit your limit",
   autoclaude waits for that time to pass, then sends:
   Escape → "continue" → Enter
 

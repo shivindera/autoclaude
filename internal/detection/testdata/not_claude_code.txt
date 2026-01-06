@@ -1,0 +1,3 @@
+$ ls -la
+total 100
+drwxr-xr-x  5 user  staff  160 Dec 25 10:00 .

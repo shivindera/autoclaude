@@ -15,13 +15,26 @@ type RateLimitStatus struct {
 	TimeUntil  time.Duration
 }
 
-// Rate limit pattern: "limit reached" followed by "resets" and a time
+// Rate limit patterns - multiple formats Claude Code uses
 // Examples: "limit reached ∙ resets 2pm", "limit reached ∙ resets 10:30am"
-var rateLimitPattern = regexp.MustCompile(`(?i)limit\s+reached.*resets?\s+(\d{1,2}(?::\d{2})?\s*[ap]m)`)
+//           "You've hit your limit · resets 10pm (Europe/London)"
+var rateLimitPatterns = []*regexp.Regexp{
+	// New format: "You've hit your limit · resets 10pm (Europe/London)"
+	regexp.MustCompile(`(?i)hit\s+your\s+limit.*resets?\s+(\d{1,2}(?::\d{2})?\s*[ap]m)`),
+	// Original format: "limit reached ∙ resets 2pm"
+	regexp.MustCompile(`(?i)limit\s+reached.*resets?\s+(\d{1,2}(?::\d{2})?\s*[ap]m)`),
+}
 
 // CheckRateLimit checks pane content for rate limit messages
 func CheckRateLimit(content string) RateLimitStatus {
-	match := rateLimitPattern.FindStringSubmatch(content)
+	// Try each pattern until one matches
+	var match []string
+	for _, pattern := range rateLimitPatterns {
+		match = pattern.FindStringSubmatch(content)
+		if match != nil {
+			break
+		}
+	}
 	if match == nil {
 		return RateLimitStatus{IsLimited: false}
 	}
