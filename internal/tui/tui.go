@@ -268,8 +268,9 @@ func (m *Model) pollPanes() {
 
 // sendContinue sends the continue command sequence to a pane
 func (m *Model) sendContinue(paneID string) {
-	// Send: Escape (dismiss any menu), "continue", Enter
+	// Send: Escape (dismiss any menu), wait for UI to settle, then "continue", Enter
 	_ = tmux.SendKeys(paneID, "Escape")
+	time.Sleep(100 * time.Millisecond) // Wait for Escape to be processed
 	_ = tmux.SendKeys(paneID, "continue")
 	_ = tmux.SendKeys(paneID, "Enter")
 
