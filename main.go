@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/henryaj/autoclaude/internal/tmux"
@@ -26,6 +28,14 @@ func main() {
 		tui.New(version, *testPattern),
 		tea.WithAltScreen(),
 	)
+
+	// Handle SIGINT and SIGTERM to ensure clean exit
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigCh
+		p.Quit()
+	}()
 
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
